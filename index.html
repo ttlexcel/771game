@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>난사데이 v2</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;600;700;900&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="app-wrapper">
+
+        <!-- ====== 설정 패널 ====== -->
+        <div class="settings-panel" id="settingsPanel">
+            <div class="settings-inner">
+
+                <div class="logo-area">
+                    <span class="logo-icon">💣</span>
+                    <h1>난사데이</h1>
+                    <span class="logo-ver">v2</span>
+                </div>
+
+                <!-- URL 크롤링 섹션 -->
+                <section class="config-section crawl-section">
+                    <div class="section-header">
+                        <span class="section-icon">🔗</span>
+                        <h2>기여도 자동 불러오기</h2>
+                    </div>
+                    <p class="section-desc">기여도가 표시된 페이지 URL을 입력하면 AI가 자동으로 멤버별 기여도를 파싱합니다.</p>
+                    <div class="url-input-row">
+                        <input type="url" id="crawlUrl" placeholder="https://example.com/contribution-page" class="url-input">
+                        <button class="btn btn-crawl" onclick="crawlUrl()">
+                            <span class="btn-txt">불러오기</span>
+                            <span class="btn-spinner" id="crawlSpinner" style="display:none">⏳</span>
+                        </button>
+                    </div>
+                    <div class="crawl-status" id="crawlStatus"></div>
+                    <div class="crawl-preview" id="crawlPreview" style="display:none">
+                        <div class="preview-header">파싱된 기여도 미리보기 <span class="preview-edit-hint">(클릭하여 수정 가능)</span></div>
+                        <div id="crawlPreviewList" class="preview-list"></div>
+                        <button class="btn btn-apply-crawl" onclick="applyCrawledData()">✅ 이 데이터로 적용</button>
+                    </div>
+                </section>
+
+                <!-- 멤버 섹션 -->
+                <section class="config-section">
+                    <div class="section-header">
+                        <span class="section-icon">👥</span>
+                        <h2>멤버 설정</h2>
+                    </div>
+                    <div class="member-source-tabs">
+                        <button class="tab-btn active" onclick="switchMemberTab('json', this)">JSON 파일</button>
+                        <button class="tab-btn" onclick="switchMemberTab('manual', this)">직접 입력</button>
+                    </div>
+                    <div id="tabJson" class="tab-content active">
+                        <p id="memberLoadStatus" class="load-status">멤버 로딩 중...</p>
+                    </div>
+                    <div id="tabManual" class="tab-content" style="display:none">
+                        <textarea id="manualMembers" class="manual-textarea" placeholder="멤버 이름을 줄바꿈으로 구분하여 입력&#10;[부장] 예란&#10;[차장] 채보미&#10;..."></textarea>
+                        <button class="btn btn-sm" onclick="applyManualMembers()">적용</button>
+                    </div>
+                </section>
+
+                <!-- 무기 설정 -->
+                <section class="config-section">
+                    <div class="section-header">
+                        <span class="section-icon">⚔️</span>
+                        <h2>무기 설정</h2>
+                    </div>
+                    <div class="weapon-table-header">
+                        <span>무기명</span>
+                        <span>기여도 가치</span>
+                        <span>벌금 (원)</span>
+                        <span></span>
+                    </div>
+                    <div id="weaponInputs">
+                        <div class="weapon-input-row">
+                            <input type="text" class="weapon-name" placeholder="무기 이름" value="핵">
+                            <input type="number" class="weapon-count" placeholder="기여도" value="100000">
+                            <input type="number" class="weapon-penalty" placeholder="벌금" value="1000000">
+                            <button class="btn-del" onclick="removeWeaponRow(this)">✕</button>
+                        </div>
+                        <div class="weapon-input-row">
+                            <input type="text" class="weapon-name" placeholder="무기 이름" value="폭탄">
+                            <input type="number" class="weapon-count" placeholder="기여도" value="10000">
+                            <input type="number" class="weapon-penalty" placeholder="벌금" value="100000">
+                            <button class="btn-del" onclick="removeWeaponRow(this)">✕</button>
+                        </div>
+                        <div class="weapon-input-row">
+                            <input type="text" class="weapon-name" placeholder="무기 이름" value="총">
+                            <input type="number" class="weapon-count" placeholder="기여도" value="5000">
+                            <input type="number" class="weapon-penalty" placeholder="벌금" value="50000">
+                            <button class="btn-del" onclick="removeWeaponRow(this)">✕</button>
+                        </div>
+                        <div class="weapon-input-row">
+                            <input type="text" class="weapon-name" placeholder="무기 이름" value="칼">
+                            <input type="number" class="weapon-count" placeholder="기여도" value="1000">
+                            <input type="number" class="weapon-penalty" placeholder="벌금" value="10000">
+                            <button class="btn-del" onclick="removeWeaponRow(this)">✕</button>
+                        </div>
+                    </div>
+                    <button class="btn btn-add-weapon" onclick="addWeaponRow()">+ 무기 추가</button>
+                </section>
+
+                <button class="btn btn-start" onclick="startGame()">🎯 게임 시작</button>
+            </div>
+        </div>
+
+        <!-- ====== 게임 보드 ====== -->
+        <div class="game-board" id="gameBoard">
+
+            <!-- 상단 헤더 -->
+            <div class="board-header">
+                <div class="board-title">💣 난사데이</div>
+                <div class="board-actions">
+                    <button class="btn btn-sm btn-ghost" onclick="loadLastGame()">💾 불러오기</button>
+                    <button class="btn btn-sm btn-danger" onclick="resetGame()">↩ 재설정</button>
+                </div>
+            </div>
+
+            <!-- 멤버 카드 그리드 -->
+            <div class="members-scroll-area">
+                <div class="member-grid" id="memberGrid"></div>
+            </div>
+
+            <!-- 하단 컨트롤 -->
+            <div class="control-bar">
+
+                <!-- 기여도 추가 -->
+                <div class="control-block">
+                    <div class="control-label">📈 기여도 추가</div>
+                    <div class="control-row">
+                        <select id="memberSelectAdd" class="ctrl-select"></select>
+                        <input type="number" id="pointsInput" class="ctrl-input" placeholder="기여도 값" min="0">
+                        <button class="btn btn-green" onclick="addPointsFromControl()">추가</button>
+                    </div>
+                </div>
+
+                <div class="control-divider"></div>
+
+                <!-- 무기 사용 -->
+                <div class="control-block">
+                    <div class="control-label">💥 무기 사용 (기여도 차감)</div>
+                    <div class="control-row">
+                        <select id="memberSelectRemove" class="ctrl-select" onchange="updateWeaponDisplay()"></select>
+                        <select id="weaponSelect" class="ctrl-select" onchange="updateCurrentWeaponCount()"></select>
+                        <div class="count-badge">
+                            <span class="count-badge-label">보유</span>
+                            <span class="count-badge-val" id="currentWeaponCount">0</span>
+                        </div>
+                        <div class="count-badge count-badge-used">
+                            <span class="count-badge-label">사용</span>
+                            <span class="count-badge-val" id="currentWeaponUsed">0</span>
+                        </div>
+                        <button class="btn btn-red" onclick="removeWeaponFromControl()">− 사용</button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
