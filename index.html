@@ -1,167 +1,739 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>난사데이 v2</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;600;700;900&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>난사데이 — FantaJ</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;600;700;900&display=swap');
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+:root {
+    --purple:#d4baff; --purple-mid:#b898f8; --purple-dark:#9370db;
+    --bg:#2e2550; --surface:#3d3268; --surface2:#4a3d7a;
+    --border:rgba(212,186,255,0.35); --border-bright:rgba(212,186,255,0.7);
+    --text:#faf6ff; --text-muted:#c4b4e8;
+    --red:#ff6b74; --red-bg:#4a1520; --red-border:rgba(255,107,116,0.5);
+    --orange:#ffaa44; --orange-bg:#3a2000; --orange-border:rgba(255,170,68,0.5);
+    --green:#4cdb8a; --green-bg:#0d3320; --green-border:rgba(76,219,138,0.5);
+}
+body { font-family:'Noto Sans KR',sans-serif; background:var(--bg); color:var(--text); min-height:100vh; padding:20px; }
+
+/* 헤더 */
+.header { text-align:center; padding:24px 0 20px; }
+.header img.logo { height:80px; object-fit:contain; filter:drop-shadow(0 0 18px rgba(180,150,255,0.5)); }
+.header h1 { font-size:13px; font-weight:600; color:var(--text-muted); letter-spacing:4px; text-transform:uppercase; margin-top:8px; }
+
+/* 설정 패널 */
+.panel { background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:28px; max-width:680px; margin:0 auto 24px; }
+.panel-title { font-size:16px; font-weight:700; color:var(--purple); letter-spacing:1px; margin-bottom:16px; }
+label { display:block; font-size:12px; font-weight:600; color:var(--text-muted); letter-spacing:1.5px; text-transform:uppercase; margin-bottom:6px; }
+input[type="number"], input[type="text"] { width:100%; background:var(--bg); border:1px solid var(--border); border-radius:8px; padding:9px 12px; font-size:14px; font-family:inherit; color:var(--text); transition:border-color 0.2s; }
+input:focus { outline:none; border-color:var(--border-bright); }
+
+/* 무기 설정 행 */
+.weapon-row { display:grid; grid-template-columns:2fr 1.5fr 1.5fr auto; gap:10px; margin-bottom:10px; align-items:center; }
+.weapon-row input { margin:0; }
+
+.btn { display:block; width:100%; padding:12px; background:var(--purple-dark); border:1px solid var(--purple-mid); border-radius:10px; color:#fff; font-size:14px; font-weight:700; font-family:inherit; cursor:pointer; transition:background 0.2s,box-shadow 0.2s; letter-spacing:1px; }
+.btn:hover { background:var(--purple-mid); box-shadow:0 0 20px rgba(139,110,224,0.4); }
+.btn-sm { padding:8px 14px; border-radius:8px; font-size:13px; width:auto; display:inline-block; }
+.btn-danger { background:var(--red-bg); border-color:var(--red); color:var(--red); }
+.btn-danger:hover { background:var(--red); color:#fff; }
+.btn-success { background:var(--green-bg); border-color:var(--green); color:var(--green); }
+.btn-success:hover { background:var(--green); color:#000; }
+.btn-warning { background:var(--orange-bg); border-color:var(--orange); color:var(--orange); }
+.btn-warning:hover { background:var(--orange); color:#000; }
+.control-box.minus-box { border-color:var(--orange-border); }
+.control-box.minus-box h3 { color:var(--orange); }
+.btn-icon { background:var(--red-bg); border:1px solid var(--red-border); border-radius:6px; color:var(--red); padding:6px 10px; font-size:12px; font-weight:700; cursor:pointer; transition:background 0.2s; }
+.btn-icon:hover { background:var(--red); color:#fff; }
+
+.divider { height:1px; background:var(--border); margin:20px 0; }
+
+.member-status { background:var(--bg); border:1px solid var(--border); border-radius:8px; padding:10px 16px; margin:16px 0; font-size:13px; color:var(--text-muted); text-align:center; }
+.member-status.ok { color:var(--green); border-color:var(--green-border); }
+.member-status.err { color:var(--red); border-color:var(--red-border); }
+
+.obs-link-row { display:flex; gap:8px; align-items:center; background:var(--bg); border:1px solid var(--border); border-radius:8px; padding:8px 14px; margin-top:4px; }
+.obs-link-display { flex:1; font-size:12px; color:var(--text-muted); word-break:break-all; font-family:monospace; }
+.btn-copy { background:var(--surface2); border:1px solid var(--border-bright); border-radius:8px; color:var(--purple); white-space:nowrap; padding:8px 14px; font-size:13px; font-weight:700; font-family:inherit; cursor:pointer; width:auto; }
+.btn-copy:hover { background:var(--purple-dark); color:#fff; }
+.btn-copy.copied { background:#1a6b45; border-color:#2ecc71; color:#2ecc71; }
+
+/* 게임 보드 */
+.game-board { display:none; }
+.game-board.active { display:block; max-width:1920px; margin:0 auto; }
+
+.game-topbar { display:flex; gap:10px; margin-bottom:14px; align-items:center; flex-wrap:wrap; }
+.sync-status { font-size:11px; color:var(--text-muted); margin-left:auto; }
+.sync-status.ok { color:var(--green); }
+.sync-status.err { color:var(--red); }
+
+/* 멤버 그리드 (세로 스크롤 및 다단 자동 갱신형태로 개선) */
+.members-wrap { background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:16px; margin-bottom:14px; }
+.member-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(135px, 1fr)); gap: 10px; }
+
+.member-card { background:var(--bg); border:1px solid var(--border); border-radius:10px; padding:8px; display:flex; flex-direction:column; width:100%; transition:border-color 0.2s, box-shadow 0.2s; }
+.member-card:hover { border-color:var(--border-bright); }
+.member-card.flabs-updated { border-color:var(--green) !important; box-shadow:0 0 10px rgba(76,219,138,0.5); }
+
+.member-name { font-size:12px; font-weight:700; color:#fff; padding:5px 6px; background:var(--purple-dark); border-radius:6px; text-align:center; margin-bottom:6px; word-break:keep-all; line-height:1.2; }
+
+.weapon-list { display:flex; flex-direction:column; gap:3px; margin-bottom:5px; }
+.weapons-row { display:flex; gap:2px; }
+.weapon-item { background:var(--surface); border:1px solid var(--border); border-radius:5px; flex:1; padding:4px 2px; display:flex; flex-direction:column; align-items:center; gap:1px; }
+.weapon-item-name { font-size:11px; font-weight:600; color:var(--text-muted); }
+.weapon-item-count { font-size:16px; font-weight:900; color:var(--purple); line-height:1; transition:transform 0.15s; }
+.weapon-item-count.bump { transform:scale(1.3); }
+
+.total-info { background:var(--surface2); border:1px solid var(--border); border-radius:6px; padding:4px 6px; text-align:center; margin-bottom:5px; }
+.total-label { font-size:9px; font-weight:600; color:rgba(255,255,255,0.6); letter-spacing:1px; text-transform:uppercase; }
+.total-value { font-size:14px; font-weight:900; color:#fff; }
+
+/* 상금 및 벌금 표시줄 */
+.finance-row { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; }
+.finance-box { border-radius: 5px; padding: 4px 2px; text-align: center; }
+.finance-box.prize { background: var(--green-bg); border: 1px solid var(--green-border); }
+.finance-box.penalty { background: var(--red-bg); border: 1px solid var(--red-border); }
+.finance-lbl { font-size: 9px; font-weight: 700; display: block; line-height: 1; margin-bottom: 2px; }
+.finance-lbl.txt-g { color: var(--green); }
+.finance-lbl.txt-r { color: var(--red); }
+.finance-val { font-size: 13px; font-weight: 900; color: #fff; line-height: 1; }
+
+/* 컨트롤 패널 */
+.control-panel { display:grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap:14px; }
+.control-box { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:16px 18px; }
+.control-box h3 { font-size:12px; font-weight:700; color:var(--text-muted); letter-spacing:2px; text-transform:uppercase; margin-bottom:12px; }
+.control-inputs { display:flex; gap:8px; align-items:flex-end; flex-wrap:wrap; }
+.input-group { display:flex; flex-direction:column; gap:4px; }
+.input-group label { font-size:10px; }
+.ctrl-select { background:var(--bg); border:1px solid var(--border); border-radius:7px; padding:7px 10px; font-size:13px; font-weight:600; font-family:inherit; color:var(--text); cursor:pointer; min-width:110px; }
+.ctrl-select:focus { outline:none; border-color:var(--border-bright); }
+.ctrl-num { width:80px; text-align:center; font-size:15px; font-weight:700; }
+.current-count { background:var(--bg); border:1px solid var(--border); border-radius:7px; padding:7px 12px; font-size:16px; font-weight:900; color:var(--purple); text-align:center; min-width:60px; }
+</style>
 </head>
 <body>
-    <div class="app-wrapper">
 
-        <!-- ====== 설정 패널 ====== -->
-        <div class="settings-panel" id="settingsPanel">
-            <div class="settings-inner">
+<div class="header">
+    <img src="771_logo.png" class="logo" alt="FantaJ">
+    <h1>난사데이</h1>
+</div>
 
-                <div class="logo-area">
-                    <span class="logo-icon">💣</span>
-                    <h1>난사데이</h1>
-                    <span class="logo-ver">v2</span>
-                </div>
-
-                <!-- URL 크롤링 섹션 -->
-                <section class="config-section crawl-section">
-                    <div class="section-header">
-                        <span class="section-icon">🔗</span>
-                        <h2>기여도 자동 불러오기</h2>
-                    </div>
-                    <p class="section-desc">기여도가 표시된 페이지 URL을 입력하면 AI가 자동으로 멤버별 기여도를 파싱합니다.</p>
-                    <div class="url-input-row">
-                        <input type="url" id="crawlUrl" placeholder="https://example.com/contribution-page" class="url-input">
-                        <button class="btn btn-crawl" onclick="crawlUrl()">
-                            <span class="btn-txt">불러오기</span>
-                            <span class="btn-spinner" id="crawlSpinner" style="display:none">⏳</span>
-                        </button>
-                    </div>
-                    <div class="crawl-status" id="crawlStatus"></div>
-                    <div class="crawl-preview" id="crawlPreview" style="display:none">
-                        <div class="preview-header">파싱된 기여도 미리보기 <span class="preview-edit-hint">(클릭하여 수정 가능)</span></div>
-                        <div id="crawlPreviewList" class="preview-list"></div>
-                        <button class="btn btn-apply-crawl" onclick="applyCrawledData()">✅ 이 데이터로 적용</button>
-                    </div>
-                </section>
-
-                <!-- 멤버 섹션 -->
-                <section class="config-section">
-                    <div class="section-header">
-                        <span class="section-icon">👥</span>
-                        <h2>멤버 설정</h2>
-                    </div>
-                    <div class="member-source-tabs">
-                        <button class="tab-btn active" onclick="switchMemberTab('json', this)">JSON 파일</button>
-                        <button class="tab-btn" onclick="switchMemberTab('manual', this)">직접 입력</button>
-                    </div>
-                    <div id="tabJson" class="tab-content active">
-                        <p id="memberLoadStatus" class="load-status">멤버 로딩 중...</p>
-                    </div>
-                    <div id="tabManual" class="tab-content" style="display:none">
-                        <textarea id="manualMembers" class="manual-textarea" placeholder="멤버 이름을 줄바꿈으로 구분하여 입력&#10;[부장] 예란&#10;[차장] 채보미&#10;..."></textarea>
-                        <button class="btn btn-sm" onclick="applyManualMembers()">적용</button>
-                    </div>
-                </section>
-
-                <!-- 무기 설정 -->
-                <section class="config-section">
-                    <div class="section-header">
-                        <span class="section-icon">⚔️</span>
-                        <h2>무기 설정</h2>
-                    </div>
-                    <div class="weapon-table-header">
-                        <span>무기명</span>
-                        <span>기여도 가치</span>
-                        <span>벌금 (원)</span>
-                        <span></span>
-                    </div>
-                    <div id="weaponInputs">
-                        <div class="weapon-input-row">
-                            <input type="text" class="weapon-name" placeholder="무기 이름" value="핵">
-                            <input type="number" class="weapon-count" placeholder="기여도" value="100000">
-                            <input type="number" class="weapon-penalty" placeholder="벌금" value="1000000">
-                            <button class="btn-del" onclick="removeWeaponRow(this)">✕</button>
-                        </div>
-                        <div class="weapon-input-row">
-                            <input type="text" class="weapon-name" placeholder="무기 이름" value="폭탄">
-                            <input type="number" class="weapon-count" placeholder="기여도" value="10000">
-                            <input type="number" class="weapon-penalty" placeholder="벌금" value="100000">
-                            <button class="btn-del" onclick="removeWeaponRow(this)">✕</button>
-                        </div>
-                        <div class="weapon-input-row">
-                            <input type="text" class="weapon-name" placeholder="무기 이름" value="총">
-                            <input type="number" class="weapon-count" placeholder="기여도" value="5000">
-                            <input type="number" class="weapon-penalty" placeholder="벌금" value="50000">
-                            <button class="btn-del" onclick="removeWeaponRow(this)">✕</button>
-                        </div>
-                        <div class="weapon-input-row">
-                            <input type="text" class="weapon-name" placeholder="무기 이름" value="칼">
-                            <input type="number" class="weapon-count" placeholder="기여도" value="1000">
-                            <input type="number" class="weapon-penalty" placeholder="벌금" value="10000">
-                            <button class="btn-del" onclick="removeWeaponRow(this)">✕</button>
-                        </div>
-                    </div>
-                    <button class="btn btn-add-weapon" onclick="addWeaponRow()">+ 무기 추가</button>
-                </section>
-
-                <button class="btn btn-start" onclick="startGame()">🎯 게임 시작</button>
-            </div>
+<div class="panel" id="settingsPanel">
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:20px;">
+        <div>
+            <label>기본 상금 설정 (만원)</label>
+            <input type="number" id="defaultPrize" value="5" min="0">
         </div>
-
-        <!-- ====== 게임 보드 ====== -->
-        <div class="game-board" id="gameBoard">
-
-            <!-- 상단 헤더 -->
-            <div class="board-header">
-                <div class="board-title">💣 난사데이</div>
-                <div class="board-actions">
-                    <button class="btn btn-sm btn-ghost" onclick="loadLastGame()">💾 불러오기</button>
-                    <button class="btn btn-sm btn-danger" onclick="resetGame()">↩ 재설정</button>
-                </div>
-            </div>
-
-            <!-- 멤버 카드 그리드 -->
-            <div class="members-scroll-area">
-                <div class="member-grid" id="memberGrid"></div>
-            </div>
-
-            <!-- 하단 컨트롤 -->
-            <div class="control-bar">
-
-                <!-- 기여도 추가 -->
-                <div class="control-block">
-                    <div class="control-label">📈 기여도 추가</div>
-                    <div class="control-row">
-                        <select id="memberSelectAdd" class="ctrl-select"></select>
-                        <input type="number" id="pointsInput" class="ctrl-input" placeholder="기여도 값" min="0">
-                        <button class="btn btn-green" onclick="addPointsFromControl()">추가</button>
-                    </div>
-                </div>
-
-                <div class="control-divider"></div>
-
-                <!-- 무기 사용 -->
-                <div class="control-block">
-                    <div class="control-label">💥 무기 사용 (기여도 차감)</div>
-                    <div class="control-row">
-                        <select id="memberSelectRemove" class="ctrl-select" onchange="updateWeaponDisplay()"></select>
-                        <select id="weaponSelect" class="ctrl-select" onchange="updateCurrentWeaponCount()"></select>
-                        <div class="count-badge">
-                            <span class="count-badge-label">보유</span>
-                            <span class="count-badge-val" id="currentWeaponCount">0</span>
-                        </div>
-                        <div class="count-badge count-badge-used">
-                            <span class="count-badge-label">사용</span>
-                            <span class="count-badge-val" id="currentWeaponUsed">0</span>
-                        </div>
-                        <button class="btn btn-red" onclick="removeWeaponFromControl()">− 사용</button>
-                    </div>
-                </div>
-
-            </div>
+        <div>
+            <label>기본 벌금 설정 (만원)</label>
+            <input type="number" id="defaultPenalty" value="3" min="0">
         </div>
-
     </div>
 
-    <script src="script.js"></script>
+    <div class="divider"></div>
+
+    <div class="panel-title">무기 설정</div>
+    <div style="display:grid;grid-template-columns:2fr 1.5fr 1.5fr auto;gap:10px;margin-bottom:8px;">
+        <label>무기 이름</label><label>갯수</label><label>벌금 (원)</label><span></span>
+    </div>
+    <div id="weaponInputs">
+        <div class="weapon-row">
+            <input type="text" class="weapon-name" placeholder="무기 이름" value="총">
+            <input type="number" class="weapon-count" placeholder="갯수" value="10000">
+            <input type="number" class="weapon-penalty" placeholder="벌금" value="10000">
+            <button class="btn-icon" onclick="removeWeaponRow(this)">삭제</button>
+        </div>
+    </div>
+    <button class="btn btn-sm" onclick="addWeaponRow()" style="margin-top:10px;width:100%;">+ 무기 추가</button>
+
+    <div class="divider"></div>
+
+    <div id="memberStatus" class="member-status">멤버 로딩 중...</div>
+
+    <div style="margin-bottom:16px;">
+        <label>OBS 브라우저 주소</label>
+        <div class="obs-link-row">
+            <div class="obs-link-display" id="obsLinkDisplay">—</div>
+            <button class="btn-copy" id="copyObsBtn" onclick="copyObsLink()">복사</button>
+        </div>
+    </div>
+
+    <button class="btn" onclick="startGame()">▶ 게임 시작</button>
+</div>
+
+<div class="game-board" id="gameBoard">
+    <div class="game-topbar">
+        <button class="btn btn-sm btn-danger" onclick="resetGame()">설정으로</button>
+        <button class="btn btn-sm" onclick="loadLastGame()">마지막 게임 불러오기</button>
+        <button class="btn btn-sm btn-success" id="flabsToggleBtn" onclick="toggleFlabsAuto()">🔗 flabs 자동 반영</button>
+        <div class="sync-status" id="flabsStatus">flabs 연동 대기 중...</div>
+        <div class="sync-status" id="syncStatus">OBS 대기 중...</div>
+    </div>
+
+    <div class="members-wrap">
+        <div class="member-grid" id="memberGrid"></div>
+    </div>
+
+    <div class="control-panel">
+        <div class="control-box" style="border-color: var(--purple-mid);">
+            <h3>🔫 1발 발사 제어</h3>
+            <div class="control-inputs">
+                <div class="input-group">
+                    <label>발사자 (상금)</label>
+                    <select id="shooterSelect" class="ctrl-select"></select>
+                </div>
+                <div class="input-group">
+                    <label>맞은 사람 (벌금)</label>
+                    <select id="targetSelect" class="ctrl-select"></select>
+                </div>
+                <div class="input-group">
+                    <label>상금(만)</label>
+                    <input type="number" id="actionPrize" class="ctrl-num" style="width:65px;">
+                </div>
+                <div class="input-group">
+                    <label>벌금(만)</label>
+                    <input type="number" id="actionPenalty" class="ctrl-num" style="width:65px;">
+                </div>
+                <button class="btn btn-sm btn-success" onclick="fireShotAction()">탕! 발사</button>
+            </div>
+        </div>
+
+        <div class="control-box">
+            <h3>기여도 추가</h3>
+            <div class="control-inputs">
+                <div class="input-group">
+                    <label>멤버</label>
+                    <select id="memberSelectAdd" class="ctrl-select"></select>
+                </div>
+                <div class="input-group">
+                    <label>기여도</label>
+                    <input type="number" id="pointsInput" class="ctrl-num" placeholder="숫자" min="0">
+                </div>
+                <button class="btn btn-sm btn-success" onclick="addPointsFromControl()">+ 추가</button>
+            </div>
+        </div>
+
+        <div class="control-box minus-box">
+            <h3>↩ 기여도 취소</h3>
+            <div class="control-inputs">
+                <div class="input-group">
+                    <label>멤버</label>
+                    <select id="memberSelectMinus" class="ctrl-select"></select>
+                </div>
+                <div class="input-group">
+                    <label>취소량</label>
+                    <input type="number" id="minusInput" class="ctrl-num" placeholder="숫자" min="0">
+                </div>
+                <button class="btn btn-sm btn-warning" onclick="subtractPointsFromControl()">− 취소</button>
+            </div>
+        </div>
+
+        <div class="control-box">
+            <h3>무기 감소</h3>
+            <div class="control-inputs">
+                <div class="input-group">
+                    <label>멤버</label>
+                    <select id="memberSelectRemove" class="ctrl-select" onchange="updateCurrentWeaponCount()"></select>
+                </div>
+                <div class="input-group">
+                    <label>무기</label>
+                    <select id="weaponSelect" class="ctrl-select" onchange="updateCurrentWeaponCount()"></select>
+                </div>
+                <div class="input-group">
+                    <label>보유</label>
+                    <div class="current-count" id="currentWeaponCount">0</div>
+                </div>
+                <button class="btn btn-sm btn-danger" onclick="removeWeaponFromControl()">- 감소</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let weapons       = [];
+let members       = [];
+let memberWeapons = {};
+
+// ── 초기화 ────────────────────────────────────────
+window.addEventListener('DOMContentLoaded', async () => {
+    await loadMembers();
+    const obsUrl = location.href.replace(/\/[^\/]*$/, '/nansa_obs.html');
+    document.getElementById('obsLinkDisplay').textContent = obsUrl;
+});
+
+// ── 멤버 로드 (flabs 구조에서 추출하도록 우선 최적화) ────────────────
+async function loadMembers() {
+    const el = document.getElementById('memberStatus');
+    try {
+        // 1순위: flabs poller 결과 구조를 역추적하여 활성화된 키 값으로 로드 시도
+        const r = await fetch('flabs_poller.php');
+        if (!r.ok) throw new Error();
+        const d = await r.json();
+        if (d.success && d.current && Object.keys(d.current).length > 0) {
+            members = Object.keys(d.current);
+            el.textContent = `✅ flabs 기여도 연동 기준 ${members.length}명 로드 완료`;
+            el.className = 'member-status ok';
+            return;
+        }
+        throw new Error();
+    } catch(e) {
+        // 2순위: 기존 백업 파일
+        try {
+            const r = await fetch('../../cignatureV2/member_order.json');
+            if (!r.ok) throw new Error();
+            members = await r.json();
+            el.textContent = `✅ 백업 파일 기준 ${members.length}명 로드 완료`;
+            el.className = 'member-status ok';
+        } catch(err) {
+            // 3순위: 내부 하드코딩 백업
+            el.textContent = '⚠️ flabs/파일 로드 실패 — 기본 예비 멤버 사용';
+            el.className = 'member-status err';
+            members = ["[부장] 예란","[차장] 채보미","[과장] 이아린","[팀장] 푸글리","[비서] 미래",
+                       "[대리] 짐광환","[사원] 이리원","[선임] 파닥","[주임] 이나율","[인턴] 김그루",
+                       "[신입] 나래","[지배인] 김대봉","[웨이터] 짖음","[웨이터] 아늑"];
+        }
+    }
+}
+
+// ── OBS 복사 ──────────────────────────────────────
+function copyObsLink() {
+    const url = document.getElementById('obsLinkDisplay').textContent;
+    const btn = document.getElementById('copyObsBtn');
+    const done = () => {
+        btn.textContent = '복사됨 ✓'; btn.classList.add('copied');
+        setTimeout(() => { btn.textContent = '복사'; btn.classList.remove('copied'); }, 2000);
+    };
+    navigator.clipboard.writeText(url).then(done).catch(() => {
+        const ta = document.createElement('textarea');
+        ta.value = url; ta.style.cssText = 'position:fixed;opacity:0';
+        document.body.appendChild(ta); ta.select(); document.execCommand('copy');
+        document.body.removeChild(ta); done();
+    });
+}
+
+// ── 무기 설정 행 ──────────────────────────────────
+function addWeaponRow() {
+    const row = document.createElement('div');
+    row.className = 'weapon-row';
+    row.innerHTML = `
+        <input type="text" class="weapon-name" placeholder="무기 이름">
+        <input type="number" class="weapon-count" placeholder="갯수">
+        <input type="number" class="weapon-penalty" placeholder="벌금">
+        <button class="btn-icon" onclick="removeWeaponRow(this)">삭제</button>`;
+    document.getElementById('weaponInputs').appendChild(row);
+}
+
+function removeWeaponRow(btn) { btn.parentElement.remove(); }
+
+// ── 게임 시작 ─────────────────────────────────────
+function startGame() {
+    if (!members.length) { alert('멤버 데이터 로딩 중입니다.'); return; }
+
+    weapons = [];
+    document.querySelectorAll('.weapon-row').forEach(row => {
+        const name    = row.querySelector('.weapon-name').value.trim();
+        const count   = parseInt(row.querySelector('.weapon-count').value);
+        const penalty = parseInt(row.querySelector('.weapon-penalty').value);
+        if (name && count > 0 && penalty >= 0) weapons.push({ name, count, penalty });
+    });
+    weapons.sort((a, b) => b.count - a.count);
+    if (!weapons.length) { alert('최소 1개 이상의 무기를 설정해주세요.'); return; }
+
+    // 제어창 기본값 세팅 연동
+    const defPrize = document.getElementById('defaultPrize').value;
+    const defPenalty = document.getElementById('defaultPenalty').value;
+    document.getElementById('actionPrize').value = defPrize;
+    document.getElementById('actionPenalty').value = defPenalty;
+
+    memberWeapons = {};
+    members.forEach(m => {
+        memberWeapons[m] = { total: 0, weapons: {}, prize: 0, penalty: 0 };
+        weapons.forEach(w => { memberWeapons[m].weapons[w.name] = 0; });
+    });
+
+    document.getElementById('settingsPanel').style.display = 'none';
+    document.getElementById('gameBoard').classList.add('active');
+
+    renderMemberCards();
+    setupEnterKey();
+
+    const saved = localStorage.getItem('난사데이_게임상태');
+    if (saved && confirm('저장된 게임이 있습니다. 불러오시겠습니까?')) {
+        loadGameState(JSON.parse(saved));
+    }
+    syncState();
+}
+
+// ── 렌더링 ────────────────────────────────────────
+function renderMemberCards() {
+    const grid = document.getElementById('memberGrid');
+    grid.innerHTML = '';
+    members.forEach(m => grid.appendChild(createMemberCard(m)));
+    updateMemberSelect();
+}
+
+function createMemberCard(member) {
+    const card = document.createElement('div');
+    card.className = 'member-card';
+    card.id = `card-${member}`;
+
+    const name = document.createElement('div');
+    name.className = 'member-name';
+    name.textContent = member;
+    card.appendChild(name);
+
+    // 무기 리스트 영역
+    const list = document.createElement('div');
+    list.className = 'weapon-list';
+    const half = Math.ceil(weapons.length / 2);
+
+    [weapons.slice(0, half), weapons.slice(half)].forEach(rowWeapons => {
+        if (!rowWeapons.length) return;
+        const row = document.createElement('div');
+        row.className = 'weapons-row';
+        rowWeapons.forEach(w => row.appendChild(createWeaponItem(member, w)));
+        list.appendChild(row);
+    });
+    card.appendChild(list);
+
+    // 기여도 총합
+    const total = document.createElement('div');
+    total.className = 'total-info';
+    total.innerHTML = `<div class="total-label">기여도</div><div class="total-value" id="${member}-total">0</div>`;
+    card.appendChild(total);
+
+    // 상금 / 벌금 출력 공간 하단 바인딩
+    const finance = document.createElement('div');
+    finance.className = 'finance-row';
+    finance.innerHTML = `
+        <div class="finance-box prize">
+            <span class="finance-lbl txt-g">상금</span>
+            <div class="finance-val" id="${member}-prize">0만</div>
+        </div>
+        <div class="finance-box penalty">
+            <span class="finance-lbl txt-r">벌금</span>
+            <div class="finance-val" id="${member}-penalty">0만</div>
+        </div>
+    `;
+    card.appendChild(finance);
+
+    return card;
+}
+
+function createWeaponItem(member, weapon) {
+    const item = document.createElement('div');
+    item.className = 'weapon-item';
+    item.innerHTML = `
+        <div class="weapon-item-name">${weapon.name}</div>
+        <div class="weapon-item-count" id="${member}-${weapon.name}-count">0</div>`;
+    return item;
+}
+
+function updateMemberSelect() {
+    ['memberSelectAdd','memberSelectMinus','memberSelectRemove', 'shooterSelect', 'targetSelect'].forEach(id => {
+        const sel = document.getElementById(id);
+        if(!sel) return;
+        sel.innerHTML = '';
+        members.forEach(m => {
+            const o = document.createElement('option');
+            o.value = m; o.textContent = m;
+            sel.appendChild(o);
+        });
+    });
+    const ws = document.getElementById('weaponSelect');
+    ws.innerHTML = '';
+    weapons.forEach(w => {
+        const o = document.createElement('option');
+        o.value = w.name; o.textContent = w.name;
+        ws.appendChild(o);
+    });
+    updateCurrentWeaponCount();
+}
+
+// ── 1발 발사 가산 액션 ─────────────────────────────
+function fireShotAction() {
+    const shooter = document.getElementById('shooterSelect').value;
+    const target = document.getElementById('targetSelect').value;
+    const prizeAmt = parseInt(document.getElementById('actionPrize').value) || 0;
+    const penaltyAmt = parseInt(document.getElementById('actionPenalty').value) || 0;
+
+    if (!shooter || !target) { alert('발사자와 피격 대상을 선택해주세요.'); return; }
+
+    // 발사자 상금 누적
+    if (memberWeapons[shooter]) {
+        memberWeapons[shooter].prize += prizeAmt;
+        updateMemberDisplay(shooter);
+        triggerVisualEffect(shooter);
+    }
+    // 맞는 사람 벌금 누적
+    if (memberWeapons[target]) {
+        memberWeapons[target].penalty += penaltyAmt;
+        updateMemberDisplay(target);
+        triggerVisualEffect(target);
+    }
+
+    autoSaveGame();
+    syncState();
+}
+
+function triggerVisualEffect(member) {
+    const card = document.getElementById(`card-${member}`);
+    if (card) {
+        card.classList.add('flabs-updated');
+        setTimeout(() => card.classList.remove('flabs-updated'), 1000);
+    }
+}
+
+// ── 기여도 추가 (수동 UI) ─────────────────────────
+function addPointsFromControl() {
+    const member = document.getElementById('memberSelectAdd').value;
+    const points = parseInt(document.getElementById('pointsInput').value);
+    if (!member) { alert('멤버를 선택해주세요.'); return; }
+    if (isNaN(points) || points <= 0) { alert('올바른 숫자를 입력해주세요.'); return; }
+
+    applyPoints(member, points);
+
+    document.getElementById('pointsInput').value = '';
+    document.getElementById('pointsInput').focus();
+}
+
+// ── 기여도 취소 (수동 UI) ────────────────────────
+function subtractPointsFromControl() {
+    const member = document.getElementById('memberSelectMinus').value;
+    const points = parseInt(document.getElementById('minusInput').value);
+    if (!member) { alert('멤버를 선택해주세요.'); return; }
+    if (isNaN(points) || points <= 0) { alert('올바른 숫자를 입력해주세요.'); return; }
+
+    const current = memberWeapons[member].total;
+    const next    = Math.max(0, current - points);
+    const diff    = current - next;
+    if (diff === 0) { alert('이미 기여도가 0입니다.'); return; }
+
+    applyPoints(member, -diff);
+    document.getElementById('minusInput').value = '';
+    document.getElementById('minusInput').focus();
+}
+
+// ── 기여도 적용 공통 함수 ─────────────────────────
+function applyPoints(member, points) {
+    if (!memberWeapons[member]) return;
+
+    memberWeapons[member].total += points;
+    const conv = convertPointsToWeapons(memberWeapons[member].total);
+    weapons.forEach(w => {
+        memberWeapons[member].weapons[w.name] = conv.weapons[w.name] || 0;
+    });
+
+    updateMemberDisplay(member);
+    updateCurrentWeaponCount();
+    autoSaveGame();
+    syncState();
+}
+
+function convertPointsToWeapons(points) {
+    const result = {}; let remaining = points;
+    for (const w of weapons) {
+        const n = Math.floor(remaining / w.count);
+        if (n > 0) { result[w.name] = n; remaining -= n * w.count; }
+    }
+    return { weapons: result, remaining };
+}
+
+// ── 무기 감소 ─────────────────────────────────────
+function removeWeaponFromControl() {
+    const member     = document.getElementById('memberSelectRemove').value;
+    const weaponName = document.getElementById('weaponSelect').value;
+    if (!member || !weaponName) { alert('멤버와 무기를 선택해주세요.'); return; }
+    removeWeapon(member, weaponName);
+    updateCurrentWeaponCount();
+}
+
+function removeWeapon(member, weaponName) {
+    if ((memberWeapons[member].weapons[weaponName] || 0) <= 0) return;
+    memberWeapons[member].weapons[weaponName]--;
+    const w = weapons.find(x => x.name === weaponName);
+    if (w) memberWeapons[member].total -= w.count;
+    updateMemberDisplay(member);
+    autoSaveGame();
+    syncState();
+}
+
+function updateCurrentWeaponCount() {
+    const member = document.getElementById('memberSelectRemove').value;
+    const wname  = document.getElementById('weaponSelect').value;
+    const el     = document.getElementById('currentWeaponCount');
+    el.textContent = (member && wname && memberWeapons[member])
+        ? (memberWeapons[member].weapons[wname] || 0) : 0;
+}
+
+// ── 디스플레이 업데이트 ───────────────────────────
+function updateMemberDisplay(member) {
+    if (!memberWeapons[member]) return;
+    weapons.forEach(w => {
+        const el = document.getElementById(`${member}-${w.name}-count`);
+        if (!el) return;
+        el.textContent = memberWeapons[member].weapons[w.name] || 0;
+    });
+    const te = document.getElementById(`${member}-total`);
+    if (te) te.textContent = memberWeapons[member].total.toLocaleString();
+
+    // 상금 벌금 출력 엘리먼트 동기화 처리
+    const pr = document.getElementById(`${member}-prize`);
+    if (pr) pr.textContent = (memberWeapons[member].prize || 0) + '만';
+    const pe = document.getElementById(`${member}-penalty`);
+    if (pe) pe.textContent = (memberWeapons[member].penalty || 0) + '만';
+}
+
+// ── 저장/불러오기 ─────────────────────────────────
+function autoSaveGame() {
+    localStorage.setItem('난사데이_게임상태', JSON.stringify({
+        weapons, members, memberWeapons, timestamp: new Date().toISOString()
+    }));
+}
+
+function loadLastGame() {
+    const saved = localStorage.getItem('난사데이_게임상태');
+    if (!saved) { alert('저장된 게임이 없습니다.'); return; }
+    try {
+        loadGameState(JSON.parse(saved));
+        alert('게임을 불러왔습니다!');
+    } catch(e) { alert('불러오기에 실패했습니다.'); }
+}
+
+function loadGameState(state) {
+    weapons       = state.weapons;
+    members       = state.members;
+    
+    // 레거시 세이브 데이터에 상금/벌금이 없는 경우 예외처리 방어 코드
+    memberWeapons = state.memberWeapons;
+    for (const m in memberWeapons) {
+        if (memberWeapons[m].prize === undefined) memberWeapons[m].prize = 0;
+        if (memberWeapons[m].penalty === undefined) memberWeapons[m].penalty = 0;
+    }
+    
+    renderMemberCards();
+    members.forEach(m => updateMemberDisplay(m));
+    syncState();
+}
+
+function resetGame() {
+    document.getElementById('settingsPanel').style.display = '';
+    document.getElementById('gameBoard').classList.remove('active');
+    weapons = []; memberWeapons = {};
+    fetch('save_nansa_state.php', {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ gameActive: false })
+    }).catch(()=>{});
+}
+
+// ── Enter 키 ─────────────────────────────────────
+function setupEnterKey() {
+    const inp = document.getElementById('pointsInput');
+    if (inp) inp.addEventListener('keypress', e => { if (e.key === 'Enter') addPointsFromControl(); });
+    const min = document.getElementById('minusInput');
+    if (min) min.addEventListener('keypress', e => { if (e.key === 'Enter') subtractPointsFromControl(); });
+}
+
+// ── flabs 자동 기여도 연동 ────────────────────────
+let flabsPollTimer   = null;
+let flabsAutoEnabled = false;
+let flabsPrevData    = {};
+
+function extractPureName(str) {
+    return str.replace(/\[[^\]]*\]/g, '').replace(/\s/g, '');
+}
+
+function findMemberByFlabsName(flabsName) {
+    const fPure = extractPureName(flabsName);
+    if (!fPure) return null;
+    return members.find(m => extractPureName(m) === fPure) || null;
+}
+
+async function pollFlabs() {
+    try {
+        const r = await fetch('flabs_poller.php');
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        const d = await r.json();
+        if (!d.success) throw new Error(d.error || '파싱 실패');
+
+        const current = d.current || {};
+        let applied = 0;
+
+        for (const [flabsName, points] of Object.entries(current)) {
+            const prev  = flabsPrevData[flabsName] ?? 0;
+            const delta = points - prev;
+            if (delta <= 0) continue;
+
+            const member = findMemberByFlabsName(flabsName);
+            if (!member || !memberWeapons[member]) continue;
+
+            applyPoints(member, delta);
+            flabsPrevData[flabsName] = points;
+            applied++;
+
+            triggerVisualEffect(member);
+        }
+
+        const el = document.getElementById('flabsStatus');
+        if (el) {
+            el.textContent = applied > 0
+                ? `✅ flabs 반영 완료 (${applied}명) — ${new Date().toLocaleTimeString('ko-KR')}`
+                : `⏳ flabs 대기 중 — ${new Date().toLocaleTimeString('ko-KR')}`;
+            el.className = 'sync-status ok';
+        }
+    } catch(e) {
+        const el = document.getElementById('flabsStatus');
+        if (el) { el.textContent = `❌ flabs 오류: ${e.message}`; el.className = 'sync-status err'; }
+    }
+}
+
+function toggleFlabsAuto() {
+    flabsAutoEnabled = !flabsAutoEnabled;
+    const btn = document.getElementById('flabsToggleBtn');
+    if (flabsAutoEnabled) {
+        flabsPrevData = {};
+        pollFlabs();
+        flabsPollTimer = setInterval(pollFlabs, 3000);
+        if (btn) { btn.textContent = '⏹ flabs 중지'; btn.className = 'btn btn-sm btn-danger'; }
+    } else {
+        clearInterval(flabsPollTimer);
+        flabsPollTimer = null;
+        flabsPrevData  = {};
+        if (btn) { btn.textContent = '🔗 flabs 자동 반영'; btn.className = 'btn btn-sm btn-success'; }
+        const el = document.getElementById('flabsStatus');
+        if (el) { el.textContent = 'flabs 연동 중지됨'; el.className = 'sync-status'; }
+    }
+}
+
+// ── OBS 동기화 ────────────────────────────────────
+async function syncState() {
+    const payload = {
+        gameActive: true,
+        weapons,
+        members,
+        memberWeapons,
+        updatedAt: Date.now()
+    };
+    try {
+        const r = await fetch('save_nansa_state.php', {
+            method:'POST', headers:{'Content-Type':'application/json'},
+            body: JSON.stringify(payload)
+        });
+        const d  = await r.json();
+        const el = document.getElementById('syncStatus');
+        if (d.success) {
+            el.textContent = `OBS 동기화 완료 — ${new Date().toLocaleTimeString('ko-KR')}`;
+            el.className = 'sync-status ok';
+        } else {
+            el.textContent = '동기화 실패'; el.className = 'sync-status err';
+        }
+    } catch(e) {
+        const el = document.getElementById('syncStatus');
+        el.textContent = '동기화 오류'; el.className = 'sync-status err';
+    }
+}
+</script>
 </body>
 </html>
